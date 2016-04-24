@@ -7,7 +7,8 @@
 const Wit = require('node-wit').Wit;
 var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
 var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
-var twilio_client = require('twilio')(accountSid, authToken), 
+var twilio = require('twilio')
+twilio_client = twilio(accountSid, authToken), 
 cronJob = require('cron').CronJob,
 express = require('express'),
 bodyParser = require('body-parser'),
@@ -20,7 +21,7 @@ app.use(bodyParser.urlencoded({
 
 
 app.post('/message', function (req, res) {
-  var resp = new twilio.TwimlResponse();
+  var resp = new twilio_client.TwimlResponse();
   resp.message('Thanks for subscribing!');
   res.writeHead(200, {
     'Content-Type':'text/xml'
