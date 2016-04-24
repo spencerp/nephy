@@ -38,9 +38,6 @@ var textJob = new cronJob( '10 21 * * *', function(){
 },  null, true);
 
 
-console.log('NEW ERROR');
-
-
 const token = (() => {
   if (process.argv.length !== 3) {
     console.log('usage: node index.js <wit-token>');
@@ -48,6 +45,8 @@ const token = (() => {
   }
   return process.argv[2];
 })();
+
+console.log('NEW ERROR 49');
 
 const firstEntityValue = (entities, entity) => {
   const val = entities && entities[entity] &&
@@ -60,6 +59,9 @@ const firstEntityValue = (entities, entity) => {
   }
   return typeof val === 'object' ? val.value : val;
 };
+
+
+console.log('NEW ERROR 64');
 
 const actions = {
   say(sessionId, context, message, cb) {
