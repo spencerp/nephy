@@ -5,6 +5,7 @@
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
 const Wit = require('node-wit').Wit;
+require("/usr/local/lib/node_modules/twilio/lib");
 
 const token = (() => {
   if (process.argv.length !== 3) {
