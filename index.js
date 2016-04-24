@@ -24,7 +24,10 @@ app.use(bodyParser.urlencoded({
 
 app.post('/message', function (req, res) {
   var resp = new twilio.TwimlResponse();
-  var user_str = req.body.Body;
+  var user_str = req.body.Body
+  console.log(req.body.From)
+
+
   resp.message(user_str + ' new response');
   res.writeHead(200, {
     'Content-Type':'text/xml'
