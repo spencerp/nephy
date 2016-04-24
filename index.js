@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({
 
 
 app.post('/message', function (req, res) {
-  var resp = new twilio_client.TwimlResponse();
+  var resp = new twilio.TwimlResponse();
   resp.message('Thanks for subscribing!');
   res.writeHead(200, {
     'Content-Type':'text/xml'
