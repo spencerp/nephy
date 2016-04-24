@@ -32,7 +32,7 @@ This means that if you were to eat a 100g bacon sandwich, you would reach 17% of
 
 These 3 minerals were chosen because they are known to cause issues in CKD patients and are not often listed on general nutrition labels. 
 
-
+More background and information in `Nephy.pdf`.
 
 
 
