@@ -7,10 +7,10 @@
 const Wit = require('node-wit').Wit;
 const http = require('http');
 
-var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
+var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a';
 var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
 var twilio = require('twilio'),
-twilio_client = twilio(accountSid, authToken), 
+twilio_client = twilio(accountSid, authToken),
 cronJob = require('cron').CronJob,
 express = require('express'),
 bodyParser = require('body-parser'),
@@ -26,6 +26,26 @@ app.use(bodyParser.urlencoded({
 // phone_number -> {context: sessionState}
 const sessions = {};
 
+const getRec = ((advice) => {
+
+  dailyLimitK = 1500;
+  dailyLimitPh = 800;
+  dailyLimitNa = 2000;
+
+  ratioK = advice.potassium/dailyLimitK;
+  ratioPh = advice.phosphorus/dailyLimitPh;
+  ratioNa = advice.sodium/dailyLimitNa;
+  var max = Math.max(ratioK, ratioPh, ratioNa);
+  var rec;
+  if (max > 1) {
+    rec = "Probably not a good idea";
+  } else if (0.5 < max <= 1) {
+    rec = "Just not too much";
+  } else {
+    rec = "Go for it";
+  }
+  return rec;
+});
 
 const getNutrientFacts = ((id, context, callback) => {
   http.get(
@@ -57,9 +77,7 @@ const getNutrientFacts = ((id, context, callback) => {
                 sensitives.potassium = quant;
                 break;
             }
-            context.advice = "Sodium: " + sensitives.sodium +
-              ", Phosphorus: " + sensitives.phosphorus +
-              ", Potassium: " + sensitives.potassium;  
+            context.advice = getRec(sensitives);
 	  }
 	}
         callback(context);
@@ -72,7 +90,7 @@ const getMineralContentForFood = ((context, callback) => {
     const food = context.food;
     const url = 'http://api.nal.usda.gov/ndb/search/?format=json&q=' + food + '&sort=n&max=25&offset=0&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy';
     console.log(url);
-    http.get(url, 
+    http.get(url,
 	function(response) {
       console.log("response");
       // Continuously update stream with data
@@ -134,7 +152,7 @@ const actions = {
     console.log(error.message);
   },
   ['suggest'](sessionId, context, cb) {
-    getMineralContentForFood(context, cb); 
+    getMineralContentForFood(context, cb);
   },
 };
 
@@ -163,7 +181,7 @@ app.post('/message', function (req, res) {
 	  message = context.advice;
 	}
 	sessions[user_num].context = context;
-      } 
+      }
 
       resp.message(message);
       res.writeHead(200, {
@@ -172,10 +190,9 @@ app.post('/message', function (req, res) {
       res.end(resp.toString());
     }
   );
-  
+
 });
 
 var server = app.listen(4567, function() {
   console.log('Listening on port %d', server.address().port);
 });
-
