@@ -7,19 +7,19 @@
 const Wit = require('node-wit').Wit;
 const http = require('http');
 
-var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a';
-var authToken = '0098aa109fc864c3aea0a68704c0fb8b'
-var twilio_client = require('twilio')(accountSid, authToken),
-cronJob = require('cron').CronJob;
-
-var textJob = new cronJob( '0 18:41 * * *', function(){
-  twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
-      body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
-},  null, true);
+// var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a';
+// var authToken = '0098aa109fc864c3aea0a68704c0fb8b'
+// var twilio_client = require('twilio')(accountSid, authToken),
+// cronJob = require('cron').CronJob;
+//
+// var textJob = new cronJob( '0 18:41 * * *', function(){
+//   twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
+//       body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
+// },  null, true);
 
 const getNutrientFacts = ((id, context, callback) => {
 
-  http.get("http://api.nal.usda.gov/ndb/reports/?ndbno=18003&type=f&format=json&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy"
+  http.get("http://api.nal.usda.gov/ndb/reports/?ndbno=" + id + "&type=f&format=json&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy"
   //   {
   //     host: 'api.nal.usda.gov',
   //     path: '/ndb/reports/?ndbno=' + id + '&type=f&format=json&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy'
@@ -33,24 +33,28 @@ const getNutrientFacts = ((id, context, callback) => {
       response.on('end', function() {
         // Data reception is done, do whatever with it!
         var parsed = JSON.parse(body);
-        console.log(parsed);
-        console.log(parsed.report.food.nutrients);
+        //console.log(parsed.report.food.nutrients);
         var sensitives = {};
-        for (var k in parsed.report.food.nutrients) {
-          switch (k.name) {
+        const report = parsed.report;
+        const nutrients = report.food.nutrients;
+        // console.log(nutrients);
+        for (var i = 0; i < nutrients.length; i++) {
+          const mineral = nutrients[i].name;
+          const quant = nutrients[i].value;
+          switch (mineral) {
             case "Sodium, Na":
-              sensitives.sodium = k.value;
+              sensitives.sodium = quant;
               break;
             case "Phosphorus, P":
-              sensitives.phosphorus = k.value;
+              sensitives.phosphorus = quant;
               break;
             case "Potassium, K":
-              sensitives.potassium = k.value;
+              sensitives.potassium = quant;
               break;
           }
         }
         context.advice = "Sodium: " + sensitives.sodium +
-          ", Phosphorous: " + sensitives.phosphorous +
+          ", Phosphorus: " + sensitives.phosphorus +
           ", Potassium: " + sensitives.potassium;
         console.log("--------" + context.advice);
         callback(context);
@@ -101,7 +105,7 @@ const getFoodId = ((context, callback) => {
           //     phosphorous: sensitives.phosphorus,
           //     potassium: sensitives.potassium,
           // });
-          const id = "1";
+          const id = "18003";
           getNutrientFacts(id, context, callback);
       });
     });
@@ -147,8 +151,7 @@ const actions = {
       context.food = "bananas";
     }
     console.log(context);
-    getFoodId(context, cb);
-    // cb(context);
+    cb(context);
   },
   error(sessionId, context, error) {
     console.log(error.message);
@@ -156,10 +159,12 @@ const actions = {
   ['suggest'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    getNutrientFacts(context, cb);
+    console.log(context);
+    const id = "18003";
+    getNutrientFacts(id, context, cb);
 
     context.advice = 'don\'t';
-    cb(context);
+    // cb(context);
   },
 };
 
