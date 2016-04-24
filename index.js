@@ -49,7 +49,7 @@ const getRec = ((minerals, context) => {
   } else if (max <= highRisk && max > medRisk) {
     rec = "Be careful, " + food + " appears to be pretty high in " + problem + ".";
   } else {
-    rec = "There are no obvious risks to eating that.";
+    rec = "There are no obvious risks to eating " + food + ".";
   }
   for (var i = 0; i < names.length; i++) {
     if (ratios[i] > 0) {
