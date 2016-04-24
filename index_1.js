@@ -6,33 +6,14 @@
 // When not cloning the `node-wit` repo, replace the `require` like so:
 const Wit = require('node-wit').Wit;
 var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
-var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
+var authToken = '0098aa109fc864c3aea0a68704c0fb8b'
 var twilio_client = require('twilio')(accountSid, authToken), 
-cronJob = require('cron').CronJob,
-express = require('express'),
-bodyParser = require('body-parser'),
-app = express();
+cronJob = require('cron').CronJob;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-
-
-app.post('/message', function (req, res) {
-  var resp = new twilio.TwimlResponse();
-  resp.message('Thanks for subscribing!');
-  res.writeHead(200, {
-    'Content-Type':'text/xml'
-  });
-  res.end(resp.toString());
-});
-
-
-var textJob = new cronJob( '15 21 * * *', function(){
+var textJob = new cronJob( '22 21 * * *', function(){
   twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
       body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
-},  null, true);
+},  null, true);
 
 
 const token = (() => {
@@ -42,7 +23,6 @@ const token = (() => {
   }
   return process.argv[2];
 })();
-
 
 const firstEntityValue = (entities, entity) => {
   const val = entities && entities[entity] &&
@@ -55,7 +35,6 @@ const firstEntityValue = (entities, entity) => {
   }
   return typeof val === 'object' ? val.value : val;
 };
-
 
 const actions = {
   say(sessionId, context, message, cb) {
@@ -84,8 +63,3 @@ const actions = {
 
 const client = new Wit(token, actions);
 client.interactive();
-
-var server = app.listen(3000, function() {
-  console.log('Listening on port %d', server.address().port);
-});
-
