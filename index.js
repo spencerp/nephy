@@ -38,6 +38,9 @@ var textJob = new cronJob( '10 21 * * *', function(){
 },  null, true);
 
 
+console.log('NEW ERROR');
+
+
 const token = (() => {
   if (process.argv.length !== 3) {
     console.log('usage: node index.js <wit-token>');
@@ -83,9 +86,14 @@ const actions = {
   },
 };
 
+
+console.log('ERROR AT 90');
+
 const client = new Wit(token, actions);
 // client.interactive();
 
+
+console.log('ERROR AT 96');
 
 // var server = app.listen(3000, function() {
 //   console.log('Listening on port %d', server.address().port);
