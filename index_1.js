@@ -62,5 +62,5 @@ const actions = {
 };
 
 const client = new Wit(token, actions);
-// client.interactive();
+client.interactive();
 

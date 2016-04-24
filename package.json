@@ -14,7 +14,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index_1.js ZMAUZDY5LSFDLMBHTHKNYZGNOZYMXJXB"
+    "start": "node index.js ZMAUZDY5LSFDLMBHTHKNYZGNOZYMXJXB"
   },
   "repository": "https://github.com/SpencerP/nephy",
   "author": "Spencer Poff <spencerpoff@gmail.com>",
