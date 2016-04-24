@@ -211,6 +211,6 @@ app.post('/message', function (req, res) {
 
 });
 
-var server = app.listen(4567, function() {
+var server = app.listen(process.env.PORT || 4567, function() {
   console.log('Listening on port %d', server.address().port);
 });
