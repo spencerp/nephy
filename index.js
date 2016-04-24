@@ -16,20 +16,20 @@ bodyParser = require('body-parser'),
 app = express();
 
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({
+//   extended: true
+// }));
 
 
-app.post('/message', function (req, res) {
-  var resp = new twilio.TwimlResponse();
-  resp.message('Thanks for subscribing!');
-  res.writeHead(200, {
-    'Content-Type':'text/xml'
-  });
-  res.end(resp.toString());
-});
+// app.post('/message', function (req, res) {
+//   var resp = new twilio.TwimlResponse();
+//   resp.message('Thanks for subscribing!');
+//   res.writeHead(200, {
+//     'Content-Type':'text/xml'
+//   });
+//   res.end(resp.toString());
+// });
 
 
 var textJob = new cronJob( '58 18 * * *', function(){
