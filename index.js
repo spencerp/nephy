@@ -10,12 +10,12 @@ var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
 var twilio = require('twilio');
 
 var twilio_client = twilio(accountSid, authToken), 
-cronJob = require('cron').CronJob, 
+cronJob = require('cron').CronJob,
 express = require('express'),
 bodyParser = require('body-parser'),
 app = express();
 
-
+console.log('WTF');
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({
 //   extended: true
@@ -32,7 +32,7 @@ app = express();
 // });
 
 
-var textJob = new cronJob( '58 18 * * *', function(){
+var textJob = new cronJob( '8 21 * * *', function(){
   twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
       body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
 },  null, true);
@@ -87,7 +87,7 @@ const client = new Wit(token, actions);
 client.interactive();
 
 
-var server = app.listen(3000, function() {
-  console.log('Listening on port %d', server.address().port);
-});
+// var server = app.listen(3000, function() {
+//   console.log('Listening on port %d', server.address().port);
+// });
 
