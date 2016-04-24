@@ -7,7 +7,7 @@
 const Wit = require('node-wit').Wit;
 var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
 var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
-var twilio = require('twilio')
+var twilio = require('twilio'),
 twilio_client = twilio(accountSid, authToken), 
 cronJob = require('cron').CronJob,
 express = require('express'),
@@ -22,18 +22,13 @@ app.use(bodyParser.urlencoded({
 
 app.post('/message', function (req, res) {
   var resp = new twilio.TwimlResponse();
-  resp.message('Thanks for subscribing!');
+  var user_str = req.body.Body;
+  resp.message(user_str + ' new response');
   res.writeHead(200, {
     'Content-Type':'text/xml'
   });
   res.end(resp.toString());
 });
-
-
-var textJob = new cronJob( '15 21 * * *', function(){
-  twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
-      body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
-},  null, true);
 
 
 const token = (() => {
@@ -86,7 +81,7 @@ const actions = {
 const client = new Wit(token, actions);
 // client.interactive();
 
-var server = app.listen(3000, function() {
+var server = app.listen(4567, function() {
   console.log('Listening on port %d', server.address().port);
 });
 
