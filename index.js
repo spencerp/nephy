@@ -32,7 +32,7 @@ console.log('WTF');
 // });
 
 
-var textJob = new cronJob( '8 21 * * *', function(){
+var textJob = new cronJob( '10 21 * * *', function(){
   twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
       body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
 },  null, true);
@@ -84,7 +84,7 @@ const actions = {
 };
 
 const client = new Wit(token, actions);
-client.interactive();
+// client.interactive();
 
 
 // var server = app.listen(3000, function() {
