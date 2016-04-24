@@ -5,6 +5,8 @@
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
 const Wit = require('node-wit').Wit;
+const http = require('http');
+
 var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
 var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
 var twilio = require('twilio'),
@@ -30,6 +32,72 @@ app.post('/message', function (req, res) {
   res.end(resp.toString());
 });
 
+
+const getNutrientFacts = ((id, context, callback) => {
+  http.get(
+    "http://api.nal.usda.gov/ndb/reports/?ndbno=" + id + "&type=f&format=json&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy",
+    function(response) {
+      // Continuously update stream with data
+      var body = '';
+      response.on('data', function(d) {
+          body += d;
+      });
+      response.on('end', function() {
+        // Data reception is done, do whatever with it!
+        var parsed = JSON.parse(body);
+        var sensitives = {};
+        const report = parsed.report;
+        const nutrients = report.food.nutrients;
+        for (var i = 0; i < nutrients.length; i++) {
+          const mineral = nutrients[i].name;
+          const quant = nutrients[i].value;
+          switch (mineral) {
+            case "Sodium, Na":
+              sensitives.sodium = quant;
+              break;
+            case "Phosphorus, P":
+              sensitives.phosphorus = quant;
+              break;
+            case "Potassium, K":
+              sensitives.potassium = quant;
+              break;
+          }
+        }
+        context.advice = "Sodium: " + sensitives.sodium +
+          ", Phosphorus: " + sensitives.phosphorus +
+          ", Potassium: " + sensitives.potassium;
+        callback(context);
+      });
+  });
+});
+
+const getMineralContentForFood = ((context, callback) => {
+  console.log("food id started");
+    const food = context.food;
+    const url = 'http://api.nal.usda.gov/ndb/search/?format=json&q=' + food + '&sort=n&max=25&offset=0&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy';
+    console.log(url);
+    http.get(url, 
+	function(response) {
+      console.log("response");
+      // Continuously update stream with data
+      var body = '';
+      response.on('data', function(d) {
+        body += d;
+      });
+      response.on('end', function() {
+        // Data reception is done, do whatever with it!
+        const parsed = JSON.parse(body);
+	var id;
+	if (parsed.list) {
+	  const items = parsed.list.item;
+	  if (items[0]) {
+	    id = items[0].ndbno;
+	  }
+	}
+        getNutrientFacts(id, context, callback);
+      });
+    });
+});
 
 const token = (() => {
   if (process.argv.length !== 3) {
@@ -62,7 +130,6 @@ const actions = {
     // Retrieve the location entity and store it into a context field
     const food = firstEntityValue(entities, 'food');
     if (food) {
-      console.log(food);
       context.food = food;
     }
     cb(context);
@@ -71,10 +138,7 @@ const actions = {
     console.log(error.message);
   },
   ['suggest'](sessionId, context, cb) {
-    // Here should go the api call, e.g.:
-    // context.forecast = apiCall(context.loc)
-    context.advice = 'don\'t';
-    cb(context);
+    getMineralContentForFood(context, cb); 
   },
 };
 
