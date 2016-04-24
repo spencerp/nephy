@@ -5,7 +5,16 @@
 
 // When not cloning the `node-wit` repo, replace the `require` like so:
 const Wit = require('node-wit').Wit;
-require("/usr/local/lib/node_modules/twilio/lib");
+var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
+var authToken = '0098aa109fc864c3aea0a68704c0fb8b'
+var twilio_client = require('twilio')(accountSid, authToken), 
+cronJob = require('cron').CronJob;
+
+var textJob = new cronJob( '0 18:41 * * *', function(){
+  twilio_client.sendMessage( { to: '1-210-219-7018', from: '+18307420376',
+      body:'Hello! Hope you’re having a good day!' }, function( err, data ) {});
+},  null, true);
+
 
 const token = (() => {
   if (process.argv.length !== 3) {
