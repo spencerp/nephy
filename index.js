@@ -7,11 +7,10 @@
 const Wit = require('node-wit').Wit;
 const http = require('http');
 
-var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a'; 
+var accountSid = 'AC43f00c7fc3b6e1c224112a677c02c56a';
 var authToken = '0098aa109fc864c3aea0a68704c0fb8b';
 var twilio = require('twilio'),
-twilio_client = twilio(accountSid, authToken), 
-cronJob = require('cron').CronJob,
+twilio_client = twilio(accountSid, authToken),
 express = require('express'),
 bodyParser = require('body-parser'),
 app = express();
@@ -25,6 +24,40 @@ app.use(bodyParser.urlencoded({
 // Each session has an entry:
 // phone_number -> {context: sessionState}
 const sessions = {};
+
+const getRec = ((minerals, context) => {
+
+  const dailyLimitK = 1500;
+  const dailyLimitPh = 800;
+  const dailyLimitNa = 2000;
+
+  const ratioK = minerals.potassium/dailyLimitK;
+  const ratioPh = minerals.phosphorus/dailyLimitPh;
+  const ratioNa = minerals.sodium/dailyLimitNa;
+  const max = Math.max(ratioK, ratioPh, ratioNa);
+  
+  const names = ["Potassium", "Phosphorus", "Sodium"];
+  const ratios = [ratioK, ratioPh, ratioNa];
+  const problem = names[ratios.indexOf(max)];
+  
+  var rec;  
+  const highRisk = 0.6;
+  const medRisk = 0.3;
+  const food = context.food.toLowerCase();
+  if (max > highRisk) {
+    rec = "You probably shouldn't eat that, " + food + " appears to be very high in " + problem + ".";
+  } else if (max <= highRisk && max > medRisk) {
+    rec = "Be careful, " + food + " appears to be pretty high in " + problem + ".";
+  } else {
+    rec = "There are no obvious risks to eating that.";
+  }
+  for (var i = 0; i < names.length; i++) {
+    if (ratios[i] > 0) {
+      rec += "\n" + names[i] + ": " + Math.round(ratios[i] * 100) + "%DV/100g";  
+    }
+  }
+  return rec;
+});
 
 const getNutrientFacts = ((id, context, callback) => {
   http.get(
@@ -45,7 +78,7 @@ const getNutrientFacts = ((id, context, callback) => {
           for (var i = 0; i < nutrients.length; i++) {
             const mineral = nutrients[i].name;
             const quant = nutrients[i].value;
-            switch (mineral) {
+	    switch (mineral) {
               case "Sodium, Na":
                 sensitives.sodium = quant;
                 break;
@@ -56,10 +89,8 @@ const getNutrientFacts = ((id, context, callback) => {
                 sensitives.potassium = quant;
                 break;
             }
-            context.advice = "Sodium: " + sensitives.sodium +
-              ", Phosphorus: " + sensitives.phosphorus +
-              ", Potassium: " + sensitives.potassium;  
 	  }
+          context.advice = getRec(sensitives, context);
 	}
         callback(context);
       });
@@ -68,10 +99,10 @@ const getNutrientFacts = ((id, context, callback) => {
 
 const getMineralContentForFood = ((context, callback) => {
   console.log("food id started");
-    const food = context.food;
+    const food = encodeURIComponent(context.food);
     const url = 'http://api.nal.usda.gov/ndb/search/?format=json&q=' + food + '&sort=n&max=25&offset=0&api_key=hhrhGfhytRdiE3nDCPKuKU1xx1t3u1eGGFcz2igy';
     console.log(url);
-    http.get(url, 
+    http.get(url,
 	function(response) {
       console.log("response");
       // Continuously update stream with data
@@ -119,7 +150,13 @@ const firstEntityValue = (entities, entity) => {
 const actions = {
   say(sessionId, context, message, cb) {
     console.log(message);
-    cb();
+    twilio_client.sendMessage({
+      to: sessionId,
+      from: '+18307420376',
+      body: message,
+    }, function(err, data) {
+      cb();
+    }, null, true);
   },
   merge(sessionId, context, entities, message, cb) {
     // Retrieve the location entity and store it into a context field
@@ -133,7 +170,7 @@ const actions = {
     console.log(error.message);
   },
   ['suggest'](sessionId, context, cb) {
-    getMineralContentForFood(context, cb); 
+    getMineralContentForFood(context, cb);
   },
 };
 
@@ -154,27 +191,26 @@ app.post('/message', function (req, res) {
     sessions[user_num].context,
     (error, context) => {
       var message = "Something went wrong, please ask again or try again later."
-      if (error) {
+      if (error || !context.advice) {
         console.log('Error:', error);
+	resp.message(message);
       } else {
 	console.log('New context:', context);
 	if (context.advice) {
 	  message = context.advice;
 	}
 	sessions[user_num].context = context;
-      } 
+      }
 
-      resp.message(message);
       res.writeHead(200, {
         'Content-Type':'text/xml'
       });
       res.end(resp.toString());
     }
   );
-  
+
 });
 
 var server = app.listen(process.env.PORT || 4567, function() {
   console.log('Listening on port %d', server.address().port);
 });
-
