@@ -21,16 +21,10 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-
-app.post('/message', function (req, res) {
-  var resp = new twilio.TwimlResponse();
-  var user_str = req.body.Body;
-  resp.message(user_str + ' new response');
-  res.writeHead(200, {
-    'Content-Type':'text/xml'
-  });
-  res.end(resp.toString());
-});
+// This will contain all user sessions.
+// Each session has an entry:
+// phone_number -> {context: sessionState}
+const sessions = {};
 
 
 const getNutrientFacts = ((id, context, callback) => {
@@ -47,25 +41,27 @@ const getNutrientFacts = ((id, context, callback) => {
         var parsed = JSON.parse(body);
         var sensitives = {};
         const report = parsed.report;
-        const nutrients = report.food.nutrients;
-        for (var i = 0; i < nutrients.length; i++) {
-          const mineral = nutrients[i].name;
-          const quant = nutrients[i].value;
-          switch (mineral) {
-            case "Sodium, Na":
-              sensitives.sodium = quant;
-              break;
-            case "Phosphorus, P":
-              sensitives.phosphorus = quant;
-              break;
-            case "Potassium, K":
-              sensitives.potassium = quant;
-              break;
-          }
-        }
-        context.advice = "Sodium: " + sensitives.sodium +
-          ", Phosphorus: " + sensitives.phosphorus +
-          ", Potassium: " + sensitives.potassium;
+        if (report) {
+          const nutrients = report.food.nutrients;
+          for (var i = 0; i < nutrients.length; i++) {
+            const mineral = nutrients[i].name;
+            const quant = nutrients[i].value;
+            switch (mineral) {
+              case "Sodium, Na":
+                sensitives.sodium = quant;
+                break;
+              case "Phosphorus, P":
+                sensitives.phosphorus = quant;
+                break;
+              case "Potassium, K":
+                sensitives.potassium = quant;
+                break;
+            }
+            context.advice = "Sodium: " + sensitives.sodium +
+              ", Phosphorus: " + sensitives.phosphorus +
+              ", Potassium: " + sensitives.potassium;  
+	  }
+	}
         callback(context);
       });
   });
@@ -142,8 +138,42 @@ const actions = {
   },
 };
 
-const client = new Wit(token, actions);
-// client.interactive();
+const wit = new Wit(token, actions);
+
+app.post('/message', function (req, res) {
+  var resp = new twilio.TwimlResponse();
+  const user_msg = req.body.Body;
+  const user_num = req.body.From;
+  if (!sessions[user_num]) {
+    sessions[user_num] = {context:{}};
+  }
+  delete sessions[user_num].context.advice;
+  console.log(user_num, sessions[user_num]);
+  wit.runActions(
+    user_num,
+    user_msg,
+    sessions[user_num].context,
+    (error, context) => {
+      var message = "Something went wrong, please ask again or try again later."
+      if (error) {
+        console.log('Error:', error);
+      } else {
+	console.log('New context:', context);
+	if (context.advice) {
+	  message = context.advice;
+	}
+	sessions[user_num].context = context;
+      } 
+
+      resp.message(message);
+      res.writeHead(200, {
+        'Content-Type':'text/xml'
+      });
+      res.end(resp.toString());
+    }
+  );
+  
+});
 
 var server = app.listen(4567, function() {
   console.log('Listening on port %d', server.address().port);
