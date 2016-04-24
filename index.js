@@ -9,7 +9,7 @@ require("/usr/local/lib/node_modules/twilio/lib");
 
 const token = (() => {
   if (process.argv.length !== 3) {
-    console.log('usage: node quickstart.js <wit-token>');
+    console.log('usage: node index.js <wit-token>');
     process.exit(1);
   }
   return process.argv[2];
@@ -34,19 +34,20 @@ const actions = {
   },
   merge(sessionId, context, entities, message, cb) {
     // Retrieve the location entity and store it into a context field
-    const loc = firstEntityValue(entities, 'location');
-    if (loc) {
-      context.loc = loc;
+    const food = firstEntityValue(entities, 'food');
+    if (food) {
+      console.log(food);
+      context.food = food;
     }
     cb(context);
   },
   error(sessionId, context, error) {
     console.log(error.message);
   },
-  ['fetch-weather'](sessionId, context, cb) {
+  ['suggest'](sessionId, context, cb) {
     // Here should go the api call, e.g.:
     // context.forecast = apiCall(context.loc)
-    context.forecast = 'sunny';
+    context.advice = 'don\'t';
     cb(context);
   },
 };
