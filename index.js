@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({
 // phone_number -> {context: sessionState}
 const sessions = {};
 
-const getRec = ((minerals, context) => {
+const getRec = ((food, minerals, context) => {
 
   const dailyLimitK = 1500;
   const dailyLimitPh = 800;
@@ -41,16 +41,18 @@ const getRec = ((minerals, context) => {
   const problem = names[ratios.indexOf(max)];
   
   var rec;  
-  const highRisk = 0.6;
-  const medRisk = 0.3;
-  const food = context.food.toLowerCase();
+  const highRisk = 0.5;
+  const medRisk = 0.2;
+  const input = context.food.toLowerCase();
   if (max > highRisk) {
-    rec = "You probably shouldn't eat that, " + food + " appears to be very high in " + problem + ".";
+    rec = "You probably shouldn't eat that, " + input + " appears to be high in " + problem + ".";
   } else if (max <= highRisk && max > medRisk) {
-    rec = "Be careful, " + food + " appears to be pretty high in " + problem + ".";
+    rec = "Be careful, " + input + " appears to be pretty high in " + problem + ".";
   } else {
-    rec = "There are no obvious risks to eating " + food + ".";
+    rec = "Based on what we found, it appears to be pretty safe to have " + input + ".";
   }
+
+  rec += "\n\n" + food + ":";
   for (var i = 0; i < names.length; i++) {
     if (ratios[i] > 0) {
       rec += "\n" + names[i] + ": " + Math.round(ratios[i] * 100) + "%DV/100g";  
@@ -74,6 +76,7 @@ const getNutrientFacts = ((id, context, callback) => {
         var sensitives = {};
         const report = parsed.report;
         if (report) {
+	  const food = report.food.name;
           const nutrients = report.food.nutrients;
           for (var i = 0; i < nutrients.length; i++) {
             const mineral = nutrients[i].name;
@@ -90,7 +93,7 @@ const getNutrientFacts = ((id, context, callback) => {
                 break;
             }
 	  }
-          context.advice = getRec(sensitives, context);
+          context.advice = getRec(food, sensitives, context);
 	}
         callback(context);
       });
@@ -104,7 +107,6 @@ const getMineralContentForFood = ((context, callback) => {
     console.log(url);
     http.get(url,
 	function(response) {
-      console.log("response");
       // Continuously update stream with data
       var body = '';
       response.on('data', function(d) {
